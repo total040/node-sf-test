@@ -1,11 +1,15 @@
 const sf = require('node-salesforce');
 const express = require('express');
 const session = require('express-session');
+const cookieSession = require('cookie-session');
+const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 
 var app = express();
 //initialize session
-app.use(session({secret: 'S3CRE7', resave: false, saveUninitialized: true}));
+app.use(cookieParser('notsosecretkey'));
+//app.use(session({secret: 'S3CRE7', resave: true, saveUninitialized: true}));
+app.use(cookieSession({secret: 'notsosecretkey123'}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -14,20 +18,20 @@ var oauth2 = new sf.OAuth2({
     // loginUrl : 'https://test.salesforce.com',
     clientId : '3MVG9HxRZv05HarRVX5s2luNhU1VaJHSc1oxUtlkdCfBeipfkjsxlfIyCk.SK6E4CYGr29ZiUcyRmM1npTFqd',
     clientSecret : '4478142252522600907',
-    redirectUri : 'http://localhost:1717/OauthRedirect'
+    redirectUri : 'http://localhost:3030/token'
 });
 //
 // Get authz url and redirect to it.
 //
 app.get('/oauth2/auth', function(req, res) {
-    var url = oauth2.getAuthorizationUrl({ scope : 'api web refresh_token' });
+    var url = oauth2.getAuthorizationUrl({ scope : 'api web id refresh_token' });
     res.redirect(url);
 });
 
-app.get('/OauthRedirect', function(req, res) {
+app.get('/token', function(req, res) {
     var conn = new sf.Connection({ oauth2 : oauth2 });
     var code = req.query.code;
-
+    req.session.token = 'tokken';
     conn.authorize(code, function(err, userInfo) {
         if (err) { return console.error(err); }
 
@@ -39,13 +43,15 @@ app.get('/OauthRedirect', function(req, res) {
         req.session.accessToken = conn.accessToken;
         req.session.instanceUrl = conn.instanceUrl;
         req.session.refreshToken = conn.refreshToken;
-        // ...
+        // https://medium.com/netscape/first-time-dev-building-a-fullstack-js-app-for-salesforce-with-oauth-login-jsforce-react-redux-ca5962fb7fe3
     });
 
 });
 
 app.get('/api/test', function(req, res) {
     console.log('session: ', req.session);
+    console.log('a_token: ', req.session.accessToken);
+    console.log('token: ', req.session.token);
 });
 
 app.get('/api/accounts', function(req, res) {
@@ -77,7 +83,7 @@ app.get('/api/accounts', function(req, res) {
         .run({ autoFetch : true, maxFetch : 4000 });
 });
 
-app.listen(1717, () => {
-    console.log(`Starting on port 1717`);
+app.listen(3030, () => {
+    console.log(`Starting on port 3030`);
 });
 
