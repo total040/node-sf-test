@@ -1,3 +1,5 @@
+const path = require('path');
+
 const sf = require('node-salesforce');
 const express = require('express');
 const session = require('express-session');
@@ -5,13 +7,24 @@ const cookieSession = require('cookie-session');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 
+const publicPath = path.join(__dirname, '../public');
+
 var app = express();
 //initialize session
-app.use(cookieParser('notsosecretkey'));
-//app.use(session({secret: 'S3CRE7', resave: true, saveUninitialized: true}));
-app.use(cookieSession({secret: 'notsosecretkey123'}));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(session({secret: 'S3CRE7', resave: false, saveUninitialized: true}));
+/*app.set('trust proxy', 1); // trust first proxy
+
+app.use(cookieSession({
+    name: 'session',
+    keys: ['key1', 'key2']
+}));*/
+//app.use(cookieSession({secret: 'notsosecretkey123'}));
+//app.use(cookieParser());
+//app.use(bodyParser.json());
+//app.use(bodyParser.urlencoded({ extended: true }));
+
+
 
 var oauth2 = new sf.OAuth2({
     // you can change loginUrl to connect to sandbox or prerelease env.
@@ -43,15 +56,10 @@ app.get('/token', function(req, res) {
         req.session.accessToken = conn.accessToken;
         req.session.instanceUrl = conn.instanceUrl;
         req.session.refreshToken = conn.refreshToken;
+        res.sendStatus(200);
         // https://medium.com/netscape/first-time-dev-building-a-fullstack-js-app-for-salesforce-with-oauth-login-jsforce-react-redux-ca5962fb7fe3
     });
 
-});
-
-app.get('/api/test', function(req, res) {
-    console.log('session: ', req.session);
-    console.log('a_token: ', req.session.accessToken);
-    console.log('token: ', req.session.token);
 });
 
 app.get('/api/accounts', function(req, res) {
@@ -82,6 +90,8 @@ app.get('/api/accounts', function(req, res) {
         })
         .run({ autoFetch : true, maxFetch : 4000 });
 });
+
+app.use(express.static(publicPath));
 
 app.listen(3030, () => {
     console.log(`Starting on port 3030`);
