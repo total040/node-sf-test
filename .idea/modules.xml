@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/node-salesforce-test.iml" filepath="$PROJECT_DIR$/.idea/node-salesforce-test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/node-sf-test.iml" filepath="$PROJECT_DIR$/.idea/node-sf-test.iml" />
     </modules>
   </component>
 </project>
